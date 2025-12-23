@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Production Calculator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 500px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input[type="number"] {
+            flex: 1;
+            padding: 12px 16px;
+            font-size: 18px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #4a90d9;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            background: #4a90d9;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #357abd;
+        }
+        .clear-btn {
+            background: #d9534f;
+        }
+        .clear-btn:hover {
+            background: #c9302c;
+        }
+        .results {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            display: none;
+        }
+        .results.show {
+            display: block;
+        }
+        .result-main {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 12px;
+        }
+        .result-detail {
+            font-size: 18px;
+            color: #555;
+            margin-bottom: 8px;
+        }
+        .result-total {
+            font-size: 14px;
+            color: #888;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #eee;
+        }
+        .highlight {
+            color: #4a90d9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Popcorn Chicken Calculator</h1>
+    <p class="subtitle">7 oz packs from 10 lb bags</p>
+
+    <div class="input-group">
+        <input type="number" id="packs" placeholder="Number of 7 oz packs" min="0">
+        <button id="actionBtn" onclick="handleAction()">Calculate</button>
+    </div>
+
+    <div class="results" id="results"></div>
+
+    <hr style="margin: 40px 0; border: none; border-top: 1px solid #ddd;">
+
+    <h1>Sandwich Calculator (12)</h1>
+    <p class="subtitle">12 per box</p>
+
+    <div class="input-group">
+        <input type="number" id="sandwiches" placeholder="Number of sandwiches needed" min="0">
+        <button id="sandwichBtn" onclick="handleSandwichAction()">Calculate</button>
+    </div>
+
+    <div class="results" id="sandwichResults"></div>
+
+    <hr style="margin: 40px 0; border: none; border-top: 1px solid #ddd;">
+
+    <h1>Sandwich Calculator (24)</h1>
+    <p class="subtitle">24 per box</p>
+
+    <div class="input-group">
+        <input type="number" id="items25" placeholder="Number of sandwiches needed" min="0">
+        <button id="items25Btn" onclick="handleItems25Action()">Calculate</button>
+    </div>
+
+    <div class="results" id="items25Results"></div>
+
+    <script>
+        let isCalculated = false;
+        let isSandwichCalculated = false;
+        let isItems25Calculated = false;
+
+        document.getElementById('packs').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') handleAction();
+        });
+
+        document.getElementById('packs').addEventListener('input', function() {
+            if (isCalculated) {
+                document.getElementById('actionBtn').textContent = 'Calculate';
+                document.getElementById('actionBtn').classList.remove('clear-btn');
+                isCalculated = false;
+            }
+        });
+
+        document.getElementById('sandwiches').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') handleSandwichAction();
+        });
+
+        document.getElementById('sandwiches').addEventListener('input', function() {
+            if (isSandwichCalculated) {
+                document.getElementById('sandwichBtn').textContent = 'Calculate';
+                document.getElementById('sandwichBtn').classList.remove('clear-btn');
+                isSandwichCalculated = false;
+            }
+        });
+
+        document.getElementById('items25').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') handleItems25Action();
+        });
+
+        document.getElementById('items25').addEventListener('input', function() {
+            if (isItems25Calculated) {
+                document.getElementById('items25Btn').textContent = 'Calculate';
+                document.getElementById('items25Btn').classList.remove('clear-btn');
+                isItems25Calculated = false;
+            }
+        });
+
+        function handleAction() {
+            if (isCalculated) {
+                clearAll();
+            } else {
+                calculate();
+            }
+        }
+
+        function clearAll() {
+            document.getElementById('packs').value = '';
+            document.getElementById('results').className = 'results';
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('actionBtn').textContent = 'Calculate';
+            document.getElementById('actionBtn').classList.remove('clear-btn');
+            isCalculated = false;
+        }
+
+        function calculate() {
+            const packs = parseInt(document.getElementById('packs').value) || 0;
+            const resultsDiv = document.getElementById('results');
+
+            if (packs <= 0) {
+                resultsDiv.className = 'results';
+                return;
+            }
+
+            const ozPerPack = 7;
+            const ozPerBag = 160; // 10 lbs = 160 oz
+
+            const totalOz = packs * ozPerPack;
+            const fullBags = Math.floor(totalOz / ozPerBag);
+            const remainderOz = totalOz % ozPerBag;
+            const remainderLbs = Math.floor(remainderOz / 16);
+            const remainderOzOnly = remainderOz % 16;
+
+            let html = '';
+
+            if (fullBags === 0) {
+                // Less than one bag needed
+                const fraction = describeFraction(remainderOz, ozPerBag);
+                html += `<div class="result-main">You need less than 1 bag</div>`;
+                html += `<div class="result-detail">Amount needed: <span class="highlight">${formatLbsOz(remainderLbs, remainderOzOnly)}</span> (${fraction})</div>`;
+            } else {
+                // One or more full bags
+                html += `<div class="result-main">You need <span class="highlight">${fullBags}</span> full 10 lb bag${fullBags > 1 ? 's' : ''}</div>`;
+
+                if (remainderOz > 0) {
+                    const fraction = describeFraction(remainderOz, ozPerBag);
+                    html += `<div class="result-detail">Plus <span class="highlight">${formatLbsOz(remainderLbs, remainderOzOnly)}</span> extra (${fraction})</div>`;
+                }
+            }
+
+            const totalLbs = Math.floor(totalOz / 16);
+            const totalOzOnly = totalOz % 16;
+            const totalGrams = Math.round(totalOz * 28.3495);
+            html += `<div class="result-total">Total weight for ${packs} packs: ${formatLbsOz(totalLbs, totalOzOnly)} (${totalOz} oz / ${totalGrams} g)</div>`;
+
+            resultsDiv.innerHTML = html;
+            resultsDiv.className = 'results show';
+            document.getElementById('actionBtn').textContent = 'Clear';
+            document.getElementById('actionBtn').classList.add('clear-btn');
+            isCalculated = true;
+        }
+
+        function formatLbsOz(lbs, oz) {
+            if (lbs === 0) {
+                return `${oz} oz`;
+            } else if (oz === 0) {
+                return `${lbs} lb${lbs > 1 ? 's' : ''}`;
+            } else {
+                return `${lbs} lb${lbs > 1 ? 's' : ''} ${oz} oz`;
+            }
+        }
+
+        function describeFraction(remainderOz, bagOz) {
+            const percent = (remainderOz / bagOz) * 100;
+
+            if (percent === 0) return '';
+            if (percent < 20) return 'less than a quarter bag';
+            if (percent < 30) return 'about a quarter bag';
+            if (percent < 45) return 'less than half a bag';
+            if (percent < 55) return 'about half a bag';
+            if (percent < 70) return 'more than half a bag';
+            if (percent < 80) return 'about three quarters of a bag';
+            return 'more than three quarters of a bag';
+        }
+
+        // Sandwich Calculator Functions
+        function handleSandwichAction() {
+            if (isSandwichCalculated) {
+                clearSandwiches();
+            } else {
+                calculateSandwiches();
+            }
+        }
+
+        function clearSandwiches() {
+            document.getElementById('sandwiches').value = '';
+            document.getElementById('sandwichResults').className = 'results';
+            document.getElementById('sandwichResults').innerHTML = '';
+            document.getElementById('sandwichBtn').textContent = 'Calculate';
+            document.getElementById('sandwichBtn').classList.remove('clear-btn');
+            isSandwichCalculated = false;
+        }
+
+        function calculateSandwiches() {
+            const total = parseInt(document.getElementById('sandwiches').value) || 0;
+            const resultsDiv = document.getElementById('sandwichResults');
+
+            if (total <= 0) {
+                resultsDiv.className = 'results';
+                return;
+            }
+
+            const perBox = 12;
+            const fullBoxes = Math.floor(total / perBox);
+            const eaches = total % perBox;
+
+            let html = '';
+
+            if (fullBoxes === 0) {
+                html += `<div class="result-main">You need <span class="highlight">${eaches}</span> each${eaches > 1 ? 'es' : ''}</div>`;
+                html += `<div class="result-detail">No full boxes needed</div>`;
+            } else if (eaches === 0) {
+                html += `<div class="result-main">You need <span class="highlight">${fullBoxes}</span> box${fullBoxes > 1 ? 'es' : ''}</div>`;
+                html += `<div class="result-detail">No extra eaches needed</div>`;
+            } else {
+                html += `<div class="result-main">You need <span class="highlight">${fullBoxes}</span> box${fullBoxes > 1 ? 'es' : ''}</div>`;
+                html += `<div class="result-detail">Plus <span class="highlight">${eaches}</span> extra each${eaches > 1 ? 'es' : ''}</div>`;
+            }
+
+            html += `<div class="result-total">Total: ${total} sandwiches</div>`;
+
+            resultsDiv.innerHTML = html;
+            resultsDiv.className = 'results show';
+            document.getElementById('sandwichBtn').textContent = 'Clear';
+            document.getElementById('sandwichBtn').classList.add('clear-btn');
+            isSandwichCalculated = true;
+        }
+
+        // Box Calculator (25) Functions
+        function handleItems25Action() {
+            if (isItems25Calculated) {
+                clearItems25();
+            } else {
+                calculateItems25();
+            }
+        }
+
+        function clearItems25() {
+            document.getElementById('items25').value = '';
+            document.getElementById('items25Results').className = 'results';
+            document.getElementById('items25Results').innerHTML = '';
+            document.getElementById('items25Btn').textContent = 'Calculate';
+            document.getElementById('items25Btn').classList.remove('clear-btn');
+            isItems25Calculated = false;
+        }
+
+        function calculateItems25() {
+            const total = parseInt(document.getElementById('items25').value) || 0;
+            const resultsDiv = document.getElementById('items25Results');
+
+            if (total <= 0) {
+                resultsDiv.className = 'results';
+                return;
+            }
+
+            const perBox = 24;
+            const fullBoxes = Math.floor(total / perBox);
+            const eaches = total % perBox;
+
+            let html = '';
+
+            if (fullBoxes === 0) {
+                html += `<div class="result-main">You need <span class="highlight">${eaches}</span> each${eaches > 1 ? 'es' : ''}</div>`;
+                html += `<div class="result-detail">No full boxes needed</div>`;
+            } else if (eaches === 0) {
+                html += `<div class="result-main">You need <span class="highlight">${fullBoxes}</span> box${fullBoxes > 1 ? 'es' : ''}</div>`;
+                html += `<div class="result-detail">No extra eaches needed</div>`;
+            } else {
+                html += `<div class="result-main">You need <span class="highlight">${fullBoxes}</span> box${fullBoxes > 1 ? 'es' : ''}</div>`;
+                html += `<div class="result-detail">Plus <span class="highlight">${eaches}</span> extra each${eaches > 1 ? 'es' : ''}</div>`;
+            }
+
+            html += `<div class="result-total">Total: ${total} sandwiches</div>`;
+
+            resultsDiv.innerHTML = html;
+            resultsDiv.className = 'results show';
+            document.getElementById('items25Btn').textContent = 'Clear';
+            document.getElementById('items25Btn').classList.add('clear-btn');
+            isItems25Calculated = true;
+        }
+    </script>
+</body>
+</html>
