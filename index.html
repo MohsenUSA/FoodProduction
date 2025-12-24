@@ -116,7 +116,8 @@
     <p class="subtitle">7 oz packs from 10 lb bags</p>
 
     <div class="input-group">
-        <input type="number" id="packs" placeholder="Number of 7 oz packs" min="0">
+        <input type="number" id="packs1" placeholder="Round 1 packs" min="0">
+        <input type="number" id="packs2" placeholder="Round 2 packs" min="0">
         <button id="actionBtn" onclick="handleAction()">Calculate</button>
     </div>
 
@@ -128,7 +129,8 @@
     <p class="subtitle">12 per box</p>
 
     <div class="input-group">
-        <input type="number" id="sandwiches" placeholder="Number of sandwiches needed" min="0">
+        <input type="number" id="sandwiches1" placeholder="Round 1" min="0">
+        <input type="number" id="sandwiches2" placeholder="Round 2" min="0">
         <button id="sandwichBtn" onclick="handleSandwichAction()">Calculate</button>
     </div>
 
@@ -140,7 +142,8 @@
     <p class="subtitle">24 per box</p>
 
     <div class="input-group">
-        <input type="number" id="items25" placeholder="Number of sandwiches needed" min="0">
+        <input type="number" id="items25_1" placeholder="Round 1" min="0">
+        <input type="number" id="items25_2" placeholder="Round 2" min="0">
         <button id="items25Btn" onclick="handleItems25Action()">Calculate</button>
     </div>
 
@@ -151,40 +154,43 @@
         let isSandwichCalculated = false;
         let isItems25Calculated = false;
 
-        document.getElementById('packs').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') handleAction();
+        ['packs1', 'packs2'].forEach(id => {
+            document.getElementById(id).addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') handleAction();
+            });
+            document.getElementById(id).addEventListener('input', function() {
+                if (isCalculated) {
+                    document.getElementById('actionBtn').textContent = 'Calculate';
+                    document.getElementById('actionBtn').classList.remove('clear-btn');
+                    isCalculated = false;
+                }
+            });
         });
 
-        document.getElementById('packs').addEventListener('input', function() {
-            if (isCalculated) {
-                document.getElementById('actionBtn').textContent = 'Calculate';
-                document.getElementById('actionBtn').classList.remove('clear-btn');
-                isCalculated = false;
-            }
+        ['sandwiches1', 'sandwiches2'].forEach(id => {
+            document.getElementById(id).addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') handleSandwichAction();
+            });
+            document.getElementById(id).addEventListener('input', function() {
+                if (isSandwichCalculated) {
+                    document.getElementById('sandwichBtn').textContent = 'Calculate';
+                    document.getElementById('sandwichBtn').classList.remove('clear-btn');
+                    isSandwichCalculated = false;
+                }
+            });
         });
 
-        document.getElementById('sandwiches').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') handleSandwichAction();
-        });
-
-        document.getElementById('sandwiches').addEventListener('input', function() {
-            if (isSandwichCalculated) {
-                document.getElementById('sandwichBtn').textContent = 'Calculate';
-                document.getElementById('sandwichBtn').classList.remove('clear-btn');
-                isSandwichCalculated = false;
-            }
-        });
-
-        document.getElementById('items25').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') handleItems25Action();
-        });
-
-        document.getElementById('items25').addEventListener('input', function() {
-            if (isItems25Calculated) {
-                document.getElementById('items25Btn').textContent = 'Calculate';
-                document.getElementById('items25Btn').classList.remove('clear-btn');
-                isItems25Calculated = false;
-            }
+        ['items25_1', 'items25_2'].forEach(id => {
+            document.getElementById(id).addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') handleItems25Action();
+            });
+            document.getElementById(id).addEventListener('input', function() {
+                if (isItems25Calculated) {
+                    document.getElementById('items25Btn').textContent = 'Calculate';
+                    document.getElementById('items25Btn').classList.remove('clear-btn');
+                    isItems25Calculated = false;
+                }
+            });
         });
 
         function handleAction() {
@@ -196,7 +202,8 @@
         }
 
         function clearAll() {
-            document.getElementById('packs').value = '';
+            document.getElementById('packs1').value = '';
+            document.getElementById('packs2').value = '';
             document.getElementById('results').className = 'results';
             document.getElementById('results').innerHTML = '';
             document.getElementById('actionBtn').textContent = 'Calculate';
@@ -204,19 +211,44 @@
             isCalculated = false;
         }
 
+        function calculateRoundPacks(packs, roundNum) {
+            const ozPerPack = 7;
+            const ozPerBag = 160;
+            const totalOz = packs * ozPerPack;
+            const fullBags = Math.floor(totalOz / ozPerBag);
+            const remainderOz = totalOz % ozPerBag;
+            const remainderLbs = Math.floor(remainderOz / 16);
+            const remainderOzOnly = remainderOz % 16;
+
+            let html = `<div class="result-detail"><strong>Round ${roundNum}:</strong> ${packs} packs → `;
+            if (fullBags === 0) {
+                const fraction = describeFraction(remainderOz, ozPerBag);
+                html += `<span class="highlight">${formatLbsOz(remainderLbs, remainderOzOnly)}</span> (${fraction})`;
+            } else {
+                html += `<span class="highlight">${fullBags}</span> bag${fullBags > 1 ? 's' : ''}`;
+                if (remainderOz > 0) {
+                    const fraction = describeFraction(remainderOz, ozPerBag);
+                    html += ` + ${formatLbsOz(remainderLbs, remainderOzOnly)} (${fraction})`;
+                }
+            }
+            html += `</div>`;
+            return html;
+        }
+
         function calculate() {
-            const packs = parseInt(document.getElementById('packs').value) || 0;
+            const packs1 = parseInt(document.getElementById('packs1').value) || 0;
+            const packs2 = parseInt(document.getElementById('packs2').value) || 0;
             const resultsDiv = document.getElementById('results');
 
-            if (packs <= 0) {
+            if (packs1 <= 0 && packs2 <= 0) {
                 resultsDiv.className = 'results';
                 return;
             }
 
             const ozPerPack = 7;
-            const ozPerBag = 160; // 10 lbs = 160 oz
-
-            const totalOz = packs * ozPerPack;
+            const ozPerBag = 160;
+            const totalPacks = packs1 + packs2;
+            const totalOz = totalPacks * ozPerPack;
             const fullBags = Math.floor(totalOz / ozPerBag);
             const remainderOz = totalOz % ozPerBag;
             const remainderLbs = Math.floor(remainderOz / 16);
@@ -224,15 +256,18 @@
 
             let html = '';
 
+            // Show each round
+            if (packs1 > 0) html += calculateRoundPacks(packs1, 1);
+            if (packs2 > 0) html += calculateRoundPacks(packs2, 2);
+
+            // Show combined total
+            html += `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee;">`;
             if (fullBags === 0) {
-                // Less than one bag needed
                 const fraction = describeFraction(remainderOz, ozPerBag);
-                html += `<div class="result-main">You need less than 1 bag</div>`;
+                html += `<div class="result-main">Total: less than 1 bag</div>`;
                 html += `<div class="result-detail">Amount needed: <span class="highlight">${formatLbsOz(remainderLbs, remainderOzOnly)}</span> (${fraction})</div>`;
             } else {
-                // One or more full bags
-                html += `<div class="result-main">You need <span class="highlight">${fullBags}</span> full 10 lb bag${fullBags > 1 ? 's' : ''}</div>`;
-
+                html += `<div class="result-main">Total: <span class="highlight">${fullBags}</span> full 10 lb bag${fullBags > 1 ? 's' : ''}</div>`;
                 if (remainderOz > 0) {
                     const fraction = describeFraction(remainderOz, ozPerBag);
                     html += `<div class="result-detail">Plus <span class="highlight">${formatLbsOz(remainderLbs, remainderOzOnly)}</span> extra (${fraction})</div>`;
@@ -242,7 +277,8 @@
             const totalLbs = Math.floor(totalOz / 16);
             const totalOzOnly = totalOz % 16;
             const totalGrams = Math.round(totalOz * 28.3495);
-            html += `<div class="result-total">Total weight for ${packs} packs: ${formatLbsOz(totalLbs, totalOzOnly)} (${totalOz} oz / ${totalGrams} g)</div>`;
+            html += `<div class="result-total">Total weight for ${totalPacks} packs: ${formatLbsOz(totalLbs, totalOzOnly)} (${totalOz} oz / ${totalGrams} g)</div>`;
+            html += `</div>`;
 
             resultsDiv.innerHTML = html;
             resultsDiv.className = 'results show';
@@ -284,7 +320,8 @@
         }
 
         function clearSandwiches() {
-            document.getElementById('sandwiches').value = '';
+            document.getElementById('sandwiches1').value = '';
+            document.getElementById('sandwiches2').value = '';
             document.getElementById('sandwichResults').className = 'results';
             document.getElementById('sandwichResults').innerHTML = '';
             document.getElementById('sandwichBtn').textContent = 'Calculate';
@@ -292,33 +329,58 @@
             isSandwichCalculated = false;
         }
 
+        function calculateRoundBoxes(count, roundNum, perBox) {
+            const fullBoxes = Math.floor(count / perBox);
+            const eaches = count % perBox;
+
+            let html = `<div class="result-detail"><strong>Round ${roundNum}:</strong> ${count} → `;
+            if (fullBoxes === 0) {
+                html += `<span class="highlight">${eaches}</span> each${eaches > 1 ? 'es' : ''}`;
+            } else if (eaches === 0) {
+                html += `<span class="highlight">${fullBoxes}</span> box${fullBoxes > 1 ? 'es' : ''}`;
+            } else {
+                html += `<span class="highlight">${fullBoxes}</span> box${fullBoxes > 1 ? 'es' : ''} + ${eaches} each${eaches > 1 ? 'es' : ''}`;
+            }
+            html += `</div>`;
+            return html;
+        }
+
         function calculateSandwiches() {
-            const total = parseInt(document.getElementById('sandwiches').value) || 0;
+            const count1 = parseInt(document.getElementById('sandwiches1').value) || 0;
+            const count2 = parseInt(document.getElementById('sandwiches2').value) || 0;
             const resultsDiv = document.getElementById('sandwichResults');
 
-            if (total <= 0) {
+            if (count1 <= 0 && count2 <= 0) {
                 resultsDiv.className = 'results';
                 return;
             }
 
             const perBox = 12;
+            const total = count1 + count2;
             const fullBoxes = Math.floor(total / perBox);
             const eaches = total % perBox;
 
             let html = '';
 
+            // Show each round
+            if (count1 > 0) html += calculateRoundBoxes(count1, 1, perBox);
+            if (count2 > 0) html += calculateRoundBoxes(count2, 2, perBox);
+
+            // Show combined total
+            html += `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee;">`;
             if (fullBoxes === 0) {
-                html += `<div class="result-main">You need <span class="highlight">${eaches}</span> each${eaches > 1 ? 'es' : ''}</div>`;
+                html += `<div class="result-main">Total: <span class="highlight">${eaches}</span> each${eaches > 1 ? 'es' : ''}</div>`;
                 html += `<div class="result-detail">No full boxes needed</div>`;
             } else if (eaches === 0) {
-                html += `<div class="result-main">You need <span class="highlight">${fullBoxes}</span> box${fullBoxes > 1 ? 'es' : ''}</div>`;
+                html += `<div class="result-main">Total: <span class="highlight">${fullBoxes}</span> box${fullBoxes > 1 ? 'es' : ''}</div>`;
                 html += `<div class="result-detail">No extra eaches needed</div>`;
             } else {
-                html += `<div class="result-main">You need <span class="highlight">${fullBoxes}</span> box${fullBoxes > 1 ? 'es' : ''}</div>`;
+                html += `<div class="result-main">Total: <span class="highlight">${fullBoxes}</span> box${fullBoxes > 1 ? 'es' : ''}</div>`;
                 html += `<div class="result-detail">Plus <span class="highlight">${eaches}</span> extra each${eaches > 1 ? 'es' : ''}</div>`;
             }
 
             html += `<div class="result-total">Total: ${total} sandwiches</div>`;
+            html += `</div>`;
 
             resultsDiv.innerHTML = html;
             resultsDiv.className = 'results show';
@@ -337,7 +399,8 @@
         }
 
         function clearItems25() {
-            document.getElementById('items25').value = '';
+            document.getElementById('items25_1').value = '';
+            document.getElementById('items25_2').value = '';
             document.getElementById('items25Results').className = 'results';
             document.getElementById('items25Results').innerHTML = '';
             document.getElementById('items25Btn').textContent = 'Calculate';
@@ -346,32 +409,41 @@
         }
 
         function calculateItems25() {
-            const total = parseInt(document.getElementById('items25').value) || 0;
+            const count1 = parseInt(document.getElementById('items25_1').value) || 0;
+            const count2 = parseInt(document.getElementById('items25_2').value) || 0;
             const resultsDiv = document.getElementById('items25Results');
 
-            if (total <= 0) {
+            if (count1 <= 0 && count2 <= 0) {
                 resultsDiv.className = 'results';
                 return;
             }
 
             const perBox = 24;
+            const total = count1 + count2;
             const fullBoxes = Math.floor(total / perBox);
             const eaches = total % perBox;
 
             let html = '';
 
+            // Show each round
+            if (count1 > 0) html += calculateRoundBoxes(count1, 1, perBox);
+            if (count2 > 0) html += calculateRoundBoxes(count2, 2, perBox);
+
+            // Show combined total
+            html += `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee;">`;
             if (fullBoxes === 0) {
-                html += `<div class="result-main">You need <span class="highlight">${eaches}</span> each${eaches > 1 ? 'es' : ''}</div>`;
+                html += `<div class="result-main">Total: <span class="highlight">${eaches}</span> each${eaches > 1 ? 'es' : ''}</div>`;
                 html += `<div class="result-detail">No full boxes needed</div>`;
             } else if (eaches === 0) {
-                html += `<div class="result-main">You need <span class="highlight">${fullBoxes}</span> box${fullBoxes > 1 ? 'es' : ''}</div>`;
+                html += `<div class="result-main">Total: <span class="highlight">${fullBoxes}</span> box${fullBoxes > 1 ? 'es' : ''}</div>`;
                 html += `<div class="result-detail">No extra eaches needed</div>`;
             } else {
-                html += `<div class="result-main">You need <span class="highlight">${fullBoxes}</span> box${fullBoxes > 1 ? 'es' : ''}</div>`;
+                html += `<div class="result-main">Total: <span class="highlight">${fullBoxes}</span> box${fullBoxes > 1 ? 'es' : ''}</div>`;
                 html += `<div class="result-detail">Plus <span class="highlight">${eaches}</span> extra each${eaches > 1 ? 'es' : ''}</div>`;
             }
 
             html += `<div class="result-total">Total: ${total} sandwiches</div>`;
+            html += `</div>`;
 
             resultsDiv.innerHTML = html;
             resultsDiv.className = 'results show';
